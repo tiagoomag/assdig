@@ -1,6 +1,7 @@
 package com.assdigteste.demo.controller;
 
 import java.io.IOException;
+import java.net.URI;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -39,26 +40,31 @@ public class DocumentoController {
     private FileStorageService fileStorageService;
 
     @GetMapping()
-    public Iterable<Documento> get() {
-	return service.getDocumentos();
+    public ResponseEntity get() {
+	return ResponseEntity.ok(service.getDocumentos());
+    }
+
+    private URI getUri(Long id) {
+	return ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
     }
 
     @PostMapping
-    public String post(@RequestBody Documento documento) {
+    public ResponseEntity post(@RequestBody Documento documento) {
 
 	Documento d = service.insert(documento);
 
-	return "Documento salvo com sucesso: " + d.getNome();
+	URI location = getUri(d.getId());
+	return ResponseEntity.created(location).build();
     }
 
     @PostMapping("/uploadFile")
-    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file, @RequestBody Documento documento) {
+    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file, Documento documento) {
 	String fileName = fileStorageService.storeFile(file);
 
 	String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/")
 		.path(fileName).toUriString();
 
-	documento.setNome(file.getName());
+	documento.setNome(fileName);
 	documento.setTamanho(file.getSize());
 	documento.setTipo(file.getContentType());
 	service.insert(documento);
