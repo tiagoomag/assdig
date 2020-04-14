@@ -6,6 +6,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
+import java.util.Arrays;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -20,6 +22,10 @@ import com.assdigteste.demo.property.FileStorageProperties;
 
 @Service
 public class FileStorageService {
+
+    private static final List<String> contentTypes = Arrays.asList("application/pdf", "application/msword",
+	    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/excel",
+	    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
 
     private final Path fileStorageLocation;
 
@@ -39,17 +45,26 @@ public class FileStorageService {
 	// Normalize file name
 	String fileName = StringUtils.cleanPath(file.getOriginalFilename());
 
+	// Tipo do arquivo
+	String fileContentType = file.getContentType();
+
 	try {
-	    // Check if the file's name contains invalid characters
-	    if (fileName.contains("..")) {
-		throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+	    /* Verifica se a extensão do arquivo é válida */
+	    if (contentTypes.contains(fileContentType)) {
+
+		// Check if the file's name contains invalid characters
+		if (fileName.contains("..")) {
+		    throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
+		}
+
+		// Copy file to the target location (Replacing existing file with the same name)
+		Path targetLocation = this.fileStorageLocation.resolve(fileName);
+		Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+		return fileName;
+	    } else {
+		throw new FileStorageException("Tipo de arquivo inválido " + fileName);
 	    }
-
-	    // Copy file to the target location (Replacing existing file with the same name)
-	    Path targetLocation = this.fileStorageLocation.resolve(fileName);
-	    Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-	    return fileName;
 	} catch (IOException ex) {
 	    throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
 	}
