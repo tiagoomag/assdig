@@ -2,6 +2,7 @@ package com.assdigteste.demo.controller;
 
 import java.io.IOException;
 import java.net.URI;
+import java.util.Optional;
 
 import javax.servlet.http.HttpServletRequest;
 
@@ -23,9 +24,11 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 
 import com.assdigteste.demo.domain.Documento;
+import com.assdigteste.demo.domain.Usuario;
 import com.assdigteste.demo.payload.UploadFileResponse;
 import com.assdigteste.demo.service.DocumentoService;
 import com.assdigteste.demo.service.FileStorageService;
+import com.assdigteste.demo.service.UsuarioService;
 
 @RestController
 @RequestMapping("/api/v1/documentos")
@@ -35,6 +38,9 @@ public class DocumentoController {
 
     @Autowired
     DocumentoService service;
+
+    @Autowired
+    UsuarioService usuarioService;
 
     @Autowired
     private FileStorageService fileStorageService;
@@ -58,12 +64,20 @@ public class DocumentoController {
     }
 
     @PostMapping("/uploadFile")
-    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file, Documento documento) {
+    public UploadFileResponse uploadFile(@RequestParam("file") MultipartFile file, Documento documento,
+	    Usuario usuario) {
 	String fileName = fileStorageService.storeFile(file);
 
 	String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/")
 		.path(fileName).toUriString();
 
+	String extensao = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+	Long usuarioLogado = 1L;
+	Optional<Usuario> usuarioEncontrado = usuarioService.getUsuarioById(usuarioLogado);
+
+	documento.setUsuario(usuarioEncontrado.get());
+	documento.setExtensao(extensao);
 	documento.setNome(fileName);
 	documento.setTamanho(file.getSize());
 	documento.setTipo(file.getContentType());

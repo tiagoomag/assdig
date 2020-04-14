@@ -6,8 +6,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.nio.file.StandardCopyOption;
-import java.util.Arrays;
-import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.Resource;
@@ -23,9 +21,13 @@ import com.assdigteste.demo.property.FileStorageProperties;
 @Service
 public class FileStorageService {
 
-    private static final List<String> contentTypes = Arrays.asList("application/pdf", "application/msword",
-	    "application/vnd.openxmlformats-officedocument.wordprocessingml.document", "application/excel",
-	    "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet");
+    private static final String TIPO_ARQUIVO = "Tipo de arquivo inválido.";
+    private static final String FALHA_ARMAZENAMENTO = "Não foi possível armazenar o arquivo.";
+    private static final String SEQUENCIA_INVALIDA = "O nome do arquivo contém uma sequência de caminhos inválida.";
+    private static final String NAO_ENCONTRADO = "Arquivo não encontrado. ";
+    private static final String DIRETORIO = "Não foi possível criar o diretório em que os arquivos enviados serão armazenados.";
+
+    private static final String TIPO_CONTEUDO = "application/pdf";
 
     private final Path fileStorageLocation;
 
@@ -36,8 +38,7 @@ public class FileStorageService {
 	try {
 	    Files.createDirectories(this.fileStorageLocation);
 	} catch (Exception ex) {
-	    throw new FileStorageException("Could not create the directory where the uploaded files will be stored.",
-		    ex);
+	    throw new FileStorageException(DIRETORIO, ex);
 	}
     }
 
@@ -49,24 +50,22 @@ public class FileStorageService {
 	String fileContentType = file.getContentType();
 
 	try {
-	    /* Verifica se a extensão do arquivo é válida */
-	    if (contentTypes.contains(fileContentType)) {
-
-		// Check if the file's name contains invalid characters
-		if (fileName.contains("..")) {
-		    throw new FileStorageException("Sorry! Filename contains invalid path sequence " + fileName);
-		}
-
-		// Copy file to the target location (Replacing existing file with the same name)
-		Path targetLocation = this.fileStorageLocation.resolve(fileName);
-		Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
-
-		return fileName;
-	    } else {
-		throw new FileStorageException("Tipo de arquivo inválido " + fileName);
+	    /* Verifica se a extensão/tipo do arquivo é válida (pdf) */
+	    if (!TIPO_CONTEUDO.contains(fileContentType)) {
+		throw new FileStorageException(TIPO_ARQUIVO);
 	    }
+	    // Check if the file's name contains invalid characters
+	    if (fileName.contains("..")) {
+		throw new FileStorageException(SEQUENCIA_INVALIDA + fileName);
+	    }
+
+	    // Copy file to the target location (Replacing existing file with the same name)
+	    Path targetLocation = this.fileStorageLocation.resolve(fileName);
+	    Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
+
+	    return fileName;
 	} catch (IOException ex) {
-	    throw new FileStorageException("Could not store file " + fileName + ". Please try again!", ex);
+	    throw new FileStorageException(FALHA_ARMAZENAMENTO, ex);
 	}
     }
 
@@ -77,10 +76,10 @@ public class FileStorageService {
 	    if (resource.exists()) {
 		return resource;
 	    } else {
-		throw new MyFileNotFoundException("File not found " + fileName);
+		throw new MyFileNotFoundException(NAO_ENCONTRADO + fileName);
 	    }
 	} catch (MalformedURLException ex) {
-	    throw new MyFileNotFoundException("File not found " + fileName, ex);
+	    throw new MyFileNotFoundException(NAO_ENCONTRADO + fileName, ex);
 	}
     }
 }
