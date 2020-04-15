@@ -31,9 +31,9 @@ public class Documento {
 
     private String extensao;
 
-    private long tamanho;
+    private float tamanho;
 
-    @ManyToOne(fetch = FetchType.LAZY, cascade=CascadeType.ALL)
+    @ManyToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @JoinColumn(name = "usuario_id", referencedColumnName = "id")
     private Usuario usuario;
 

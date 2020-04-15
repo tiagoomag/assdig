@@ -6,6 +6,8 @@ import javax.persistence.GenerationType;
 import javax.persistence.Id;
 import javax.persistence.Table;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.Setter;
@@ -15,6 +17,7 @@ import lombok.Setter;
 @Setter
 @Entity
 @Table(name = "usuario")
+@JsonIgnoreProperties({ "hibernateLazyInitializer", "handler" })
 public class Usuario {
 
     @Id

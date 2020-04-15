@@ -21,13 +21,12 @@ import com.assdigteste.demo.property.FileStorageProperties;
 @Service
 public class FileStorageService {
 
-    private static final String TIPO_ARQUIVO = "Tipo de arquivo inválido.";
+    private static final String DOCUMENTO_INVALIDO = "Tipo de arquivo inválido. Verifique o formato do arquivo.";
     private static final String FALHA_ARMAZENAMENTO = "Não foi possível armazenar o arquivo.";
-    private static final String SEQUENCIA_INVALIDA = "O nome do arquivo contém uma sequência de caminhos inválida.";
     private static final String NAO_ENCONTRADO = "Arquivo não encontrado. ";
     private static final String DIRETORIO = "Não foi possível criar o diretório em que os arquivos enviados serão armazenados.";
-
     private static final String TIPO_CONTEUDO = "application/pdf";
+    private static final String TAMANHO_MAXIMO = "O arquivo ultrapassou o limite máximo de 15MB.";
 
     private final Path fileStorageLocation;
 
@@ -50,16 +49,18 @@ public class FileStorageService {
 	String fileContentType = file.getContentType();
 
 	try {
-	    /* Verifica se a extensão/tipo do arquivo é válida (pdf) */
-	    if (!TIPO_CONTEUDO.contains(fileContentType)) {
-		throw new FileStorageException(TIPO_ARQUIVO);
+	    /* Verifica se o arquivo é válido */
+	    if (!(TIPO_CONTEUDO.contains(fileContentType)) || fileName.contains("..")) {
+		throw new FileStorageException(DOCUMENTO_INVALIDO);
 	    }
-	    // Check if the file's name contains invalid characters
-	    if (fileName.contains("..")) {
-		throw new FileStorageException(SEQUENCIA_INVALIDA + fileName);
+	    /* Verifica se o arquivo é maior do que 15MB */
+	    if (file.getSize() > 15000000) {
+		throw new FileStorageException(TAMANHO_MAXIMO + fileName);
 	    }
 
-	    // Copy file to the target location (Replacing existing file with the same name)
+	    // validar nome do arquivo, não pode ser =
+
+	    /* Copia arquivo para o local */
 	    Path targetLocation = this.fileStorageLocation.resolve(fileName);
 	    Files.copy(file.getInputStream(), targetLocation, StandardCopyOption.REPLACE_EXISTING);
 

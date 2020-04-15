@@ -37,7 +37,7 @@ public class DocumentoController {
     private static final Logger logger = LoggerFactory.getLogger(DocumentoController.class);
 
     @Autowired
-    DocumentoService service;
+    DocumentoService documentoService;
 
     @Autowired
     UsuarioService usuarioService;
@@ -47,7 +47,7 @@ public class DocumentoController {
 
     @GetMapping()
     public ResponseEntity get() {
-	return ResponseEntity.ok(service.getDocumentos());
+	return ResponseEntity.ok(documentoService.getDocumentos());
     }
 
     private URI getUri(Long id) {
@@ -57,7 +57,7 @@ public class DocumentoController {
     @PostMapping
     public ResponseEntity post(@RequestBody Documento documento) {
 
-	Documento d = service.insert(documento);
+	Documento d = documentoService.insert(documento);
 
 	URI location = getUri(d.getId());
 	return ResponseEntity.created(location).build();
@@ -68,20 +68,24 @@ public class DocumentoController {
 	    Usuario usuario) {
 	String fileName = fileStorageService.storeFile(file);
 
-	String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath().path("/downloadFile/")
-		.path(fileName).toUriString();
+	String fileDownloadUri = ServletUriComponentsBuilder.fromCurrentContextPath()
+		.path("/api/v1/documentos/downloadFile/").path(fileName).toUriString();
 
+	/* recuperando apenas a extensão do arquivo */
 	String extensao = fileName.substring(fileName.lastIndexOf(".") + 1);
+
+	/* recuperando apenas nome do arquivo */
+	String nome = fileName.substring(0, fileName.indexOf('.'));
 
 	Long usuarioLogado = 1L;
 	Optional<Usuario> usuarioEncontrado = usuarioService.getUsuarioById(usuarioLogado);
 
 	documento.setUsuario(usuarioEncontrado.get());
 	documento.setExtensao(extensao);
-	documento.setNome(fileName);
+	documento.setNome(nome);
 	documento.setTamanho(file.getSize());
 	documento.setTipo(file.getContentType());
-	service.insert(documento);
+	documentoService.insert(documento);
 
 	return new UploadFileResponse(fileName, fileDownloadUri, file.getContentType(), file.getSize());
     }
