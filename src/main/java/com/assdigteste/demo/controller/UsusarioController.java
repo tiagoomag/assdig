@@ -1,7 +1,6 @@
 package com.assdigteste.demo.controller;
 
 import java.net.URI;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -11,7 +10,6 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
-
 import com.assdigteste.demo.domain.Usuario;
 import com.assdigteste.demo.service.UsuarioService;
 
@@ -19,30 +17,31 @@ import com.assdigteste.demo.service.UsuarioService;
 @RequestMapping("/api/v1/usuarios")
 public class UsusarioController {
 
-    @Autowired
-    UsuarioService service;
+  @Autowired
+  UsuarioService service;
 
-    @GetMapping()
-    public ResponseEntity get() {
-	return ResponseEntity.ok(service.getUsuarios());
-    }
+  @GetMapping()
+  public ResponseEntity get() {
+    return ResponseEntity.ok(service.getUsuarios());
+  }
 
-    @GetMapping("/{id}")
-    public ResponseEntity getById(@PathVariable("id") Long id) {
-	return ResponseEntity.ok(service.getUsuarioById(id));
-    }
+  @GetMapping("/{id}")
+  public ResponseEntity getById(@PathVariable("id") Long id) {
+    return ResponseEntity.ok(service.getUsuarioById(id));
+  }
 
-    private URI getUri(Long id) {
-	return ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id).toUri();
-    }
+  private URI getUri(Long id) {
+    return ServletUriComponentsBuilder.fromCurrentRequest().path("/{id}").buildAndExpand(id)
+        .toUri();
+  }
 
-    @PostMapping
-    public ResponseEntity post(@RequestBody Usuario usuario) {
+  @PostMapping
+  public ResponseEntity post(@RequestBody Usuario usuario) {
 
-	Usuario u = service.insert(usuario);
+    Usuario u = service.insert(usuario);
 
-	URI location = getUri(u.getId());
-	return ResponseEntity.created(location).build();
-    }
+    URI location = getUri(u.getId());
+    return ResponseEntity.created(location).build();
+  }
 
 }
